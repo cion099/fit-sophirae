@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FITSOPHI — Train Dirty, Live Loud</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14120f;
+    --ink-2:#1c1914;
+    --chalk:#ede7da;
+    --chalk-dim:#c9c2b0;
+    --flame:#ff3d6e;
+    --flame-dim:#a82a4c;
+    --brass:#c9a24b;
+    --slate:#8a8474;
+    --line: rgba(237,231,218,0.14);
+    --radius: 2px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--ink);
+    color:var(--chalk);
+    font-family:'Work Sans', sans-serif;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Bebas Neue', sans-serif;
+    letter-spacing:0.02em;
+    line-height:0.9;
+    font-weight:400;
+  }
+  .mono{font-family:'JetBrains Mono', monospace;}
+  a{color:inherit; text-decoration:none;}
+  img{max-width:100%; display:block;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+  ::selection{background:var(--flame); color:var(--ink);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
+  /* ===== AGE GATE ===== */
+  #gate{
+    position:fixed; inset:0; z-index:999;
+    background:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+  }
+  .gate-card{
+    max-width:420px; width:100%;
+    text-align:center;
+    border:1px solid var(--line);
+    padding:44px 32px;
+    background:var(--ink-2);
+    position:relative;
+  }
+  .gate-card::before{
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, var(--flame), var(--brass));
+  }
+  .gate-mark{font-family:'Bebas Neue'; font-size:2.4rem; letter-spacing:0.06em; margin-bottom:6px;}
+  .gate-sub{color:var(--slate); font-size:0.85rem; margin-bottom:28px; line-height:1.5;}
+  .gate-badge{
+    display:inline-block; border:1px solid var(--flame); color:var(--flame);
+    font-family:'JetBrains Mono'; font-size:0.75rem; padding:4px 10px; margin-bottom:20px;
+    letter-spacing:0.08em;
+  }
+  .gate-btns{display:flex; gap:12px; margin-top:24px;}
+  .btn{
+    flex:1;
+    padding:14px 18px;
+    font-family:'JetBrains Mono'; font-size:0.78rem; letter-spacing:0.06em;
+    border:1px solid var(--line);
+    background:transparent; color:var(--chalk);
+    cursor:pointer; text-transform:uppercase;
+    transition:all .2s ease;
+  }
+  .btn-primary{background:var(--flame); border-color:var(--flame); color:var(--ink); font-weight:600;}
+  .btn-primary:hover{background:var(--chalk); border-color:var(--chalk);}
+  .btn:hover{border-color:var(--chalk);}
+  body.locked{overflow:hidden;}
+  #site{display:none;}
+
+  /* ===== NAV ===== */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(20,18,15,0.88);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px;
+    max-width:1180px; margin:0 auto;
+  }
+  .logo{font-family:'Bebas Neue'; font-size:1.4rem; letter-spacing:0.08em;}
+  .logo span{color:var(--flame);}
+  .navlinks{display:flex; gap:28px; font-size:0.82rem; letter-spacing:0.03em;}
+  .navlinks a{color:var(--chalk-dim); transition:color .2s;}
+  .navlinks a:hover{color:var(--flame);}
+  .nav-cta{
+    font-family:'JetBrains Mono'; font-size:0.72rem; letter-spacing:0.05em;
+    border:1px solid var(--brass); color:var(--brass);
+    padding:9px 16px; text-transform:uppercase;
+    transition:all .2s;
+  }
+  .nav-cta:hover{background:var(--brass); color:var(--ink);}
+  .navlinks-mobile{display:none;}
+
+  /* ===== HERO ===== */
+  .hero{
+    position:relative;
+    padding:100px 28px 0;
+    text-align:center;
+    overflow:hidden;
+  }
+  .hero-eyebrow{
+    font-family:'JetBrains Mono'; font-size:0.75rem; letter-spacing:0.18em;
+    color:var(--brass); text-transform:uppercase; margin-bottom:18px;
+  }
+  .hero-eyebrow::before{content:'AU · '; color:var(--slate);}
+  .hero h1{
+    font-size:clamp(4.2rem, 15vw, 9.5rem);
+    color:var(--chalk);
+  }
+  .hero h1 em{
+    font-style:normal; color:var(--flame);
+  }
+  .hero-tag{
+    max-width:520px; margin:22px auto 0;
+    color:var(--chalk-dim); font-size:1.05rem; line-height:1.6;
+  }
+  .hero-actions{
+    display:flex; gap:14px; justify-content:center; margin:36px 0 0;
+    flex-wrap:wrap;
+  }
+  .btn-hero{
+    padding:16px 30px;
+    font-family:'JetBrains Mono'; font-size:0.8rem; letter-spacing:0.05em;
+    text-transform:uppercase; cursor:pointer; border:1px solid transparent;
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  .btn-hero:hover{transform:translateY(-2px);}
+  .btn-flame{background:var(--flame); color:var(--ink); font-weight:600;}
+  .btn-outline{border-color:var(--line); color:var(--chalk);}
+  .btn-outline:hover{border-color:var(--chalk);}
+
+  /* scoreboard signature */
+  .board{
+    margin-top:64px;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    background:
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+  }
+  .board-inner{
+    max-width:1180px; margin:0 auto;
+    display:grid; grid-template-columns:repeat(4,1fr);
+  }
+  .board-cell{
+    padding:26px 12px;
+    text-align:center;
+    border-left:1px solid var(--line);
+  }
+  .board-cell:first-child{border-left:none;}
+  .board-num{
+    font-family:'JetBrains Mono'; font-weight:600;
+    font-size:clamp(1.4rem,3.4vw,2.2rem);
+    color:var(--flame);
+    letter-spacing:0.02em;
+  }
+  .board-label{
+    font-family:'JetBrains Mono'; font-size:0.68rem;
+    color:var(--slate); text-transform:uppercase; letter-spacing:0.1em;
+    margin-top:6px;
+  }
+
+  /* ===== SECTION SHARED ===== */
+  section{padding:110px 0;}
+  .section-head{margin-bottom:56px;}
+  .section-eyebrow{
+    font-family:'JetBrains Mono'; font-size:0.72rem; letter-spacing:0.14em;
+    color:var(--brass); text-transform:uppercase; margin-bottom:12px;
+  }
+  .section-title{font-size:clamp(2.4rem, 5vw, 3.6rem);}
+  .divider{width:44px; height:2px; background:var(--flame); margin-top:18px;}
+
+  /* ===== ABOUT ===== */
+  .about{
+    display:grid; grid-template-columns:0.9fr 1.1fr; gap:64px; align-items:center;
+  }
+  .about-visual{
+    aspect-ratio:4/5;
+    background:
+      linear-gradient(160deg, #22201a 0%, #14120f 60%),
+      repeating-linear-gradient(45deg, rgba(255,61,110,0.06) 0px, rgba(255,61,110,0.06) 2px, transparent 2px, transparent 14px);
+    border:1px solid var(--line);
+    position:relative;
+    display:flex; align-items:flex-end; padding:22px;
+  }
+  .about-visual::after{
+    content:'PHOTO — DROP IN HERO SHOT';
+    font-family:'JetBrains Mono'; font-size:0.65rem; letter-spacing:0.08em;
+    color:var(--slate); text-transform:uppercase;
+  }
+  .about-copy p{
+    color:var(--chalk-dim); line-height:1.75; margin-bottom:18px; font-size:1.02rem;
+  }
+  .about-copy strong{color:var(--chalk); font-weight:600;}
+  .stat-row{display:flex; gap:36px; margin-top:32px;}
+  .stat-row div span{display:block; font-family:'Bebas Neue'; font-size:2.2rem; color:var(--brass);}
+  .stat-row div small{font-family:'JetBrains Mono'; font-size:0.65rem; color:var(--slate); letter-spacing:0.08em; text-transform:uppercase;}
+
+  /* ===== SHOP ===== */
+  .shop{background:var(--ink-2); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .shop-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+    background:var(--line);
+  }
+  .product{
+    background:var(--ink-2);
+    padding:30px 26px 34px;
+    transition:background .2s ease;
+  }
+  .product:hover{background:#221f18;}
+  .product-tag{
+    font-family:'JetBrains Mono'; font-size:0.65rem; color:var(--flame);
+    text-transform:uppercase; letter-spacing:0.1em; margin-bottom:14px;
+  }
+  .product-visual{
+    aspect-ratio:1/1; margin-bottom:20px;
+    background:linear-gradient(135deg, #29261e, #17150f);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .product-visual svg{width:38%; opacity:0.55;}
+  .product h3{font-size:1.6rem; color:var(--chalk); margin-bottom:8px; letter-spacing:0.01em;}
+  .product p{color:var(--chalk-dim); font-size:0.92rem; line-height:1.6; margin-bottom:18px;}
+  .product-foot{display:flex; align-items:center; justify-content:space-between;}
+  .price{font-family:'JetBrains Mono'; color:var(--brass); font-weight:600;}
+  .link-arrow{font-family:'JetBrains Mono'; font-size:0.75rem; color:var(--chalk-dim); border-bottom:1px solid var(--line); padding-bottom:2px; transition:color .2s, border-color .2s;}
+  .product:hover .link-arrow{color:var(--flame); border-color:var(--flame);}
+
+  /* ===== LOCKER ROOM (OF CTA) ===== */
+  .locker{
+    position:relative;
+    background:
+      linear-gradient(180deg, #1a1712 0%, #14120f 100%);
+    border-bottom:1px solid var(--line);
+  }
+  .locker-inner{
+    max-width:760px; margin:0 auto; text-align:center;
+    border:1px solid rgba(201,162,75,0.35);
+    padding:64px 40px;
+    position:relative;
+  }
+  .locker-inner::before, .locker-inner::after{
+    content:''; position:absolute; width:18px; height:18px;
+    border:1px solid var(--brass);
+  }
+  .locker-inner::before{top:-1px; left:-1px; border-right:none; border-bottom:none;}
+  .locker-inner::after{bottom:-1px; right:-1px; border-left:none; border-top:none;}
+  .lock-badge{
+    display:inline-block; font-family:'JetBrains Mono'; font-size:0.68rem;
+    letter-spacing:0.12em; color:var(--flame); border:1px solid var(--flame);
+    padding:5px 12px; margin-bottom:22px; text-transform:uppercase;
+  }
+  .locker h2{font-size:clamp(2.4rem,6vw,3.8rem); margin-bottom:18px;}
+  .locker p{color:var(--chalk-dim); max-width:480px; margin:0 auto 34px; line-height:1.7;}
+  .btn-of{
+    display:inline-block; background:var(--flame); color:var(--ink);
+    font-family:'JetBrains Mono'; font-weight:600; letter-spacing:0.05em;
+    padding:17px 38px; font-size:0.85rem; text-transform:uppercase;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .btn-of:hover{transform:translateY(-2px); background:var(--chalk);}
+  .locker-note{margin-top:18px; font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--slate); letter-spacing:0.04em;}
+
+  /* ===== SOCIALS ===== */
+  .socials{text-align:center;}
+  .social-row{
+    display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-top:36px;
+  }
+  .social-pill{
+    border:1px solid var(--line); padding:12px 22px;
+    font-family:'JetBrains Mono'; font-size:0.78rem; letter-spacing:0.04em;
+    color:var(--chalk-dim); transition:all .2s;
+  }
+  .social-pill:hover{border-color:var(--brass); color:var(--brass);}
+
+  /* ===== FOOTER ===== */
+  footer{
+    border-top:1px solid var(--line);
+    padding:40px 0;
+  }
+  .foot-inner{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;
+  }
+  .foot-inner span{font-family:'JetBrains Mono'; font-size:0.7rem; color:var(--slate); letter-spacing:0.03em;}
+
+  @media (max-width:860px){
+    .navlinks{display:none;}
+    .about{grid-template-columns:1fr; gap:36px;}
+    .shop-grid{grid-template-columns:1fr;}
+    .board-inner{grid-template-columns:repeat(2,1fr);}
+    .board-cell:nth-child(3){border-left:none;}
+    .stat-row{gap:24px; flex-wrap:wrap;}
+    section{padding:72px 0;}
+  }
+</style>
+</head>
+<body class="locked">
+
+  <!-- AGE GATE -->
+  <div id="gate">
+    <div class="gate-card">
+      <div class="gate-badge">18+ ONLY</div>
+      <div class="gate-mark">FIT<span style="color:var(--flame)">SOPHI</span></div>
+      <p class="gate-sub">This site links to adult subscription content. You must be 18 years or older (or the age of majority in your location) to enter.</p>
+      <div class="gate-btns">
+        <button class="btn" id="leaveBtn">Exit</button>
+        <button class="btn btn-primary" id="enterBtn">I'm 18+ — Enter</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="site">
+    <header>
+      <nav>
+        <div class="logo">FIT<span>SOPHI</span></div>
+        <div class="navlinks">
+          <a href="#about">About</a>
+          <a href="#shop">Shop</a>
+          <a href="#exclusive">Exclusive</a>
+          <a href="#connect">Connect</a>
+        </div>
+        <a href="https://fansly.com/sophijdoll" class="nav-cta">Join Fansly</a>
+      </nav>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero" style="padding-bottom:0;">
+      <div class="hero-eyebrow">Sydney-built · Gym-first · Aussie made</div>
+      <h1>TRAIN LIKE<br><em>YOU MEAN IT</em></h1>
+      <p class="hero-tag">Sophi — coach, lifter, and the face behind FITSOPHI. Gym programs and apparel built in Australia, plus an exclusive members' side for the ones who want the full session.</p>
+      <div class="hero-actions">
+        <a href="#shop" class="btn-hero btn-outline">Shop the range</a>
+        <a href="#exclusive" class="btn-hero btn-flame">Unlock exclusive</a>
+      </div>
+
+      <div class="board">
+        <div class="board-inner">
+          <div class="board-cell">
+            <div class="board-num">40K+</div>
+            <div class="board-label">Community</div>
+          </div>
+          <div class="board-cell">
+            <div class="board-num">6</div>
+            <div class="board-label">Programs Sold</div>
+          </div>
+          <div class="board-cell">
+            <div class="board-num">AUS</div>
+            <div class="board-label">Based &amp; Shipped</div>
+          </div>
+          <div class="board-cell">
+            <div class="board-num">WKLY</div>
+            <div class="board-label">New Drops</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about">
+      <div class="wrap about">
+        <div class="about-visual"></div>
+        <div class="about-copy">
+          <div class="section-eyebrow">The Story</div>
+          <h2 class="section-title">Gym floor to<br>your feed.</h2>
+          <div class="divider"></div>
+          <p style="margin-top:24px;"><strong>I'm Sophi</strong> — an Aussie lifter who turned a decade in the gym into a brand built around strength, consistency, and having a laugh while you sweat.</p>
+          <p>FITSOPHI started as training logs for friends. It's grown into apparel, coaching programs, and a members' community where I share the parts of the journey that don't fit in a 30-second reel.</p>
+          <div class="stat-row">
+            <div><span>10+</span><small>Years Training</small></div>
+            <div><span>4.9</span><small>Client Rating</small></div>
+            <div><span>AU</span><small>Owned &amp; Run</small></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SHOP -->
+    <section class="shop" id="shop">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-eyebrow">Gym Range</div>
+          <h2 class="section-title">Built for the sessions<br>that matter.</h2>
+        </div>
+      </div>
+      <div class="shop-grid">
+        <div class="product">
+          <div class="product-tag">Apparel</div>
+          <div class="product-visual">
+            <svg viewBox="0 0 64 64" fill="none" stroke="#c9a24b" stroke-width="2"><path d="M8 20 L20 12 L26 18 L26 54 L38 54 L38 18 L44 12 L56 20 L48 30 L44 27 L44 58 L20 58 L20 27 L16 30 Z"/></svg>
+          </div>
+          <h3>The Session Set</h3>
+          <p>Signature FITSOPHI tank + shorts, sweat-wicking and built for heavy lifting days.</p>
+          <div class="product-foot">
+            <span class="price">$68 AUD</span>
+            <a href="#" class="link-arrow">Shop set →</a>
+          </div>
+        </div>
+        <div class="product">
+          <div class="product-tag">Program</div>
+          <div class="product-visual">
+            <svg viewBox="0 0 64 64" fill="none" stroke="#c9a24b" stroke-width="2"><rect x="10" y="10" width="44" height="44" rx="2"/><path d="M18 26h28M18 34h28M18 42h18"/></svg>
+          </div>
+          <h3>12-Week Strength Block</h3>
+          <p>My full progressive lifting program — glutes, back, and full-body strength cycles.</p>
+          <div class="product-foot">
+            <span class="price">$89 AUD</span>
+            <a href="#" class="link-arrow">Get program →</a>
+          </div>
+        </div>
+        <div class="product">
+          <div class="product-tag">Accessories</div>
+          <div class="product-visual">
+            <svg viewBox="0 0 64 64" fill="none" stroke="#c9a24b" stroke-width="2"><circle cx="32" cy="32" r="6"/><path d="M4 32h14M46 32h14M14 20l6 6M44 38l6 6M14 44l6-6M44 26l6-6"/></svg>
+          </div>
+          <h3>Lifting Belt — Blush</h3>
+          <p>Leather-backed support belt in the FITSOPHI colourway. Competition-grade.</p>
+          <div class="product-foot">
+            <span class="price">$54 AUD</span>
+            <a href="#" class="link-arrow">Shop belt →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOCKER ROOM / OF CTA -->
+    <section class="locker" id="exclusive">
+      <div class="wrap">
+        <div class="locker-inner">
+          <div class="lock-badge">Members Only · 18+</div>
+          <h2>The Locker Room</h2>
+          <p>My most personal content, behind-the-scenes of every shoot and session, and direct chat with me — all on OnlyFans, off the main feed.</p>
+          <a href="https://fansly.com/sophijdoll" target="_blank" rel="noopener" class="btn-of">Visit @fitsophi on Fansly</a>
+          <a href="https://fansly.com/sophijdoll" target="_blank" rel="noopener" class="btn-of">Visit @fitsophi on OnlyFans</a>
+          <div class="locker-note">You'll be taken to fansly.com | onlyfans.com — 18+ verification required there.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SOCIALS -->
+    <section class="socials" id="connect">
+      <div class="wrap">
+        <div class="section-eyebrow" style="text-align:center;">Stay in the loop</div>
+        <h2 class="section-title">Find me everywhere.</h2>
+        <div class="social-row">
+          <a class="social-pill" href="#">Instagram — @fitsophi</a>
+          <a class="social-pill" href="#">TikTok — @fitsophi</a>
+          <a class="social-pill" href="#">Spotify Playlist</a>
+          <a class="social-pill" href="#">Email List</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap foot-inner">
+        <span>© 2026 FITSOPHI. ALL RIGHTS RESERVED.</span>
+        <span>SYDNEY, AUSTRALIA — 18+ CONTENT LINKED OFF-SITE</span>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const gate = document.getElementById('gate');
+    const site = document.getElementById('site');
+    const body = document.body;
+    document.getElementById('enterBtn').addEventListener('click', () => {
+      gate.style.display = 'none';
+      site.style.display = 'block';
+      body.classList.remove('locked');
+    });
+    document.getElementById('leaveBtn').addEventListener('click', () => {
+      window.location.href = 'https://www.google.com';
+    });
+  </script>
+</body>
+</html>
